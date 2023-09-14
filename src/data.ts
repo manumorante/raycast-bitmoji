@@ -6,8 +6,9 @@ const DEFAULT_AVATAR = "20246000_31-s1";
 
 export const hasAvatar = preferences.avatarID !== undefined;
 export const avatarID = hasAvatar ? preferences.avatarID : DEFAULT_AVATAR;
-const uniqueTemplates = [...new Map(imoji.map((item) => [item.src, item])).values()];
-export const templates = uniqueTemplates.map((template) => {
-  template.src = template.src.replace("%s", avatarID);
-  return template;
+
+const uniqueEmojis = [...new Map(imoji.map((item) => [item.src, item])).values()];
+export const emojis = uniqueEmojis.map((emoji) => {
+  emoji.src = emoji.src.replace("%s", avatarID);
+  return emoji;
 });

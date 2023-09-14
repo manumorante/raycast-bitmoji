@@ -6,4 +6,5 @@ export type Template = {
   categories: string[];
   supertags: string[];
   alt_text?: string;
+  descriptive_alt_text?: string;
 };
