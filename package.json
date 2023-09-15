@@ -40,9 +40,57 @@
       "name": "avatarID",
       "description": "Your Bitmoji user ID",
       "type": "textfield",
-      "required": false,
+      "required": true,
       "title": "Avatar ID",
       "placeholder": "Your Bitmoji user ID"
+    },
+    {
+      "name": "friendID",
+      "description": "Your friend Bitmoji user ID",
+      "type": "textfield",
+      "required": false,
+      "title": "Friend ID",
+      "placeholder": "Your friend Bitmoji user ID"
+    },
+    {
+      "name": "gridSize",
+      "description": "Grid size",
+      "type": "dropdown",
+      "required": false,
+      "title": "Grid size",
+      "default": "5",
+      "data": [
+        {
+          "title": "Small",
+          "value": "8"
+        },
+        {
+          "title": "Medium",
+          "value": "5"
+        },
+        {
+          "title": "Big",
+          "value": "3"
+        }
+      ]
+    },
+    {
+      "name": "showTitle",
+      "description": "Show title",
+      "type": "checkbox",
+      "required": false,
+      "title": "Title",
+      "label": "Show description in emoji title",
+      "default": false
+    },
+    {
+      "name": "showTooltip",
+      "description": "Show Tooltip",
+      "type": "checkbox",
+      "required": false,
+      "title": "Tooltip",
+      "label": "Show description when hover in emoji",
+      "default": true
     }
   ]
 }

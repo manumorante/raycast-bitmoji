@@ -1,4 +1,4 @@
-export type Template = {
+export type Emoji = {
   template_id: string;
   comic_id: string;
   src: string;

@@ -1,128 +1,68 @@
-import { Action, ActionPanel, Grid, Icon, Color, List } from "@raycast/api";
-import { emojis } from "./data";
-import { Template } from "./types";
+import { Action, ActionPanel, Grid, Icon } from "@raycast/api";
+import { emojis, preferences } from "./data";
+import SectionFilterBy from "./SectionFilterBy";
+import { Emoji } from "./types";
 import { useState } from "react";
 
 export default function Command() {
-  const [selectedCat, setSelectedCat] = useState<string | undefined>(undefined);
-  const [selectedTag, setSelectedTag] = useState<string | undefined>(undefined);
-  const [selectedEmoji, setSelectedEmoji] = useState<Template | undefined>(undefined);
-  const [gridColumns, setGridColumns] = useState("5");
+  const [query, setQuery] = useState("");
+  const [type, setType] = useState("solo");
 
-  let results = emojis;
+  let results = type === "solo" ? emojis.solo : emojis.friends;
+  results = results.filter(({ tags, categories, alt_text }) => {
+    if (!query) return true;
+    return tags.includes(query) || alt_text?.includes(query) || categories.includes(query);
+  });
 
-  if (selectedEmoji) {
-    results = emojis.filter((emoji) => emoji.categories.includes(selectedEmoji.categories[0]));
-  }
-
-  if (selectedTag) {
-    results = emojis.filter((emoji) => emoji.tags.includes(selectedTag));
-  }
-
-  if (selectedCat) {
-    results = emojis.filter((emoji) => emoji.categories.includes(selectedCat));
-  }
-
-  const handleSelectEmoji = (emoji: Template) => {
-    setSelectedTag(undefined);
-    setSelectedEmoji(emoji);
-  };
-
-  const handleSelectTag = (tag: string) => {
-    setSelectedEmoji(undefined);
-    setSelectedTag(tag);
-  };
-
-  const handleSelectCat = (cat: string) => {
-    setSelectedTag(undefined);
-    setSelectedEmoji(undefined);
-    setSelectedCat(cat);
-  };
-
-  const cuteCat = (cat: string) => {
-    return cat.replaceAll("#mt_", "").replaceAll("_", " ");
-  };
+  const handleSearch = (query: string) => setQuery(query);
+  const handleReset = () => setQuery("");
 
   return (
     <Grid
-      columns={Number(gridColumns)}
+      columns={Number(preferences.gridSize)}
       aspectRatio="1"
       fit={Grid.Fit.Fill}
-      searchBarAccessory={<Dropdown onChange={(value: string) => setGridColumns(value)} />}
+      searchText={query}
+      searchBarPlaceholder="Search for Emojis"
+      onSearchTextChange={handleSearch}
+      filtering={false}
+      searchBarAccessory={
+        <Grid.Dropdown tooltip="Select Emoji Category" storeValue={true} onChange={(newValue) => setType(newValue)}>
+          <Grid.Dropdown.Item title="Emojis" value="solo" />
+          <Grid.Dropdown.Item title="Friends" value="friends" />
+          <Grid.Dropdown.Item title="Outfits" value="outfits" />
+        </Grid.Dropdown>
+      }
     >
-      <Grid.Section
-        title={selectedEmoji || selectedTag ? `${results.length} emojis filtering by` : `${results.length} emojis`}
-        subtitle={
-          selectedEmoji
-            ? `${selectedEmoji.categories.map((cat: string) => cuteCat(cat)).join(", ")}`
-            : selectedTag
-            ? `${selectedTag}`
-            : ``
-        }
-      >
-        {results.map((emoji: Template) => {
+      <Grid.Section title={`${results.length} emojis`}>
+        {results.map((emoji: Emoji) => {
           return (
             <Grid.Item
               key={emoji.src}
-              keywords={emoji.tags}
-              content={emoji.src}
+              {...(preferences.showTitle ? { title: emoji.alt_text } : {})}
+              content={{
+                source: emoji.src,
+                tooltip: emoji.alt_text,
+              }}
               actions={
                 <ActionPanel>
-                  <Action.CopyToClipboard title="Copy" content={emoji.src} />
+                  <Action.CopyToClipboard title="Copy Emoji" content={emoji.src} />
 
-                  {(emoji.descriptive_alt_text || emoji.alt_text) && (
-                    <ActionPanel.Section title="Alt text">
-                      {emoji.alt_text && <Action.CopyToClipboard title={emoji.alt_text} content={emoji.alt_text} />}
-                      {emoji.descriptive_alt_text && (
-                        <Action.CopyToClipboard
-                          title={emoji.descriptive_alt_text}
-                          content={emoji.descriptive_alt_text}
-                        />
-                      )}
-                    </ActionPanel.Section>
+                  {query && (
+                    <Action icon={Icon.XMarkCircleFilled} title="Reset Filters" onAction={() => handleReset()} />
                   )}
 
-                  <ActionPanel.Section title="Tags">
-                    {emoji.tags.map((tag: string, index: number) => {
-                      const isSelected = tag === selectedTag;
-                      return (
-                        <Action
-                          key={index}
-                          icon={{
-                            source: Icon.Tag,
-                            tintColor: isSelected ? Color.PrimaryText : Color.SecondaryText,
-                          }}
-                          title={tag}
-                          onAction={() => handleSelectTag(tag)}
-                        />
-                      );
-                    })}
+                  <ActionPanel.Section title="Filter">
+                    <SectionFilterBy items={emoji.tags} onAction={handleSearch} />
+                    <SectionFilterBy items={emoji.categories} onAction={handleSearch} />
                   </ActionPanel.Section>
 
-                  <ActionPanel.Section title="Categories">
-                    {selectedEmoji && (
-                      <Action
-                        icon={Icon.XMarkCircleFilled}
-                        title="View All Categories"
-                        onAction={() => setSelectedCat("all")}
-                      />
-                    )}
-                    <Action icon={Icon.Eye} title="Select All" onAction={() => handleSelectEmoji(emoji)} />
-                    {emoji.categories.map((cat: string) => {
-                      const isSelected = cat === selectedCat;
-                      return (
-                        <Action
-                          icon={{
-                            source: isSelected ? Icon.CircleProgress100 : Icon.Circle,
-                            tintColor: isSelected ? Color.PrimaryText : Color.SecondaryText,
-                          }}
-                          title={cuteCat(cat)}
-                          onAction={() => handleSelectCat(cat)}
-                          key={cat}
-                        />
-                      );
-                    })}
-                  </ActionPanel.Section>
+                  {(emoji.descriptive_alt_text || emoji.alt_text) && (
+                    <ActionPanel.Section title="Description">
+                      {emoji.alt_text && <Action title={emoji.alt_text} />}
+                      {emoji.descriptive_alt_text && <Action title={emoji.descriptive_alt_text} />}
+                    </ActionPanel.Section>
+                  )}
                 </ActionPanel>
               }
             />
@@ -130,22 +70,5 @@ export default function Command() {
         })}
       </Grid.Section>
     </Grid>
-  );
-}
-
-function Dropdown(props: { onChange: (newValue: string) => void }) {
-  return (
-    <List.Dropdown
-      filtering={false}
-      tooltip="Grid columns"
-      storeValue={true}
-      onChange={(value) => props.onChange(value)}
-    >
-      <List.Dropdown.Section title="Grid">
-        <List.Dropdown.Item icon={Icon.AppWindowGrid3x3} title="Small" value="8" />
-        <List.Dropdown.Item icon={Icon.AppWindowGrid2x2} title="Medium" value="5" />
-        <List.Dropdown.Item icon={Icon.AppWindowGrid2x2} title="Big" value="3" />
-      </List.Dropdown.Section>
-    </List.Dropdown>
   );
 }

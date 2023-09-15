@@ -1,14 +1,27 @@
 import { getPreferenceValues } from "@raycast/api";
-import { imoji } from "./data.json";
+import data from "./data.json";
 
-const preferences = getPreferenceValues();
-const DEFAULT_AVATAR = "20246000_31-s1";
+export const preferences = getPreferenceValues();
 
-export const hasAvatar = preferences.avatarID !== undefined;
-export const avatarID = hasAvatar ? preferences.avatarID : DEFAULT_AVATAR;
-
-const uniqueEmojis = [...new Map(imoji.map((item) => [item.src, item])).values()];
-export const emojis = uniqueEmojis.map((emoji) => {
-  emoji.src = emoji.src.replace("%s", avatarID);
-  return emoji;
+// Friends
+const _friends = [...new Map(data.friends.map((emo) => [emo.src, emo])).values()];
+_friends.sort(() => Math.random() - 0.5);
+const friendsID = _friends.map((emo) => {
+  emo.src = emo.src.replace("%s", preferences.avatarID).replace("%s", preferences.friendID || preferences.avatarID);
+  return emo;
 });
+
+// Emojis
+const _solos = [...new Map(data.imoji.map((emo) => [emo.src, emo])).values()];
+_solos.sort(() => Math.random() - 0.5);
+const solosID = _solos.map((emo) => {
+  emo.src = emo.src.replace("%s", preferences.avatarID);
+  return emo;
+});
+
+export const emojis = {
+  solo: solosID,
+  friends: friendsID,
+};
+
+export const cuteCat = (cat: string) => cat.replaceAll("#mt_", "").replaceAll("_", " ");
