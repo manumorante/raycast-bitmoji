@@ -1,27 +1,42 @@
 import { getPreferenceValues } from "@raycast/api";
-import data from "./data.json";
+export { default as emojis } from "../data/emojis.json";
+export { default as brands } from "../data/brands.json";
+export { default as outfits } from "../data/outfits.json";
 
-export const preferences = getPreferenceValues();
+export const pref = getPreferenceValues();
 
-// Friends
-const _friends = [...new Map(data.friends.map((emo) => [emo.src, emo])).values()];
-_friends.sort(() => Math.random() - 0.5);
-const friendsID = _friends.map((emo) => {
-  emo.src = emo.src.replace("%s", preferences.avatarID).replace("%s", preferences.friendID || preferences.avatarID);
-  return emo;
-});
+export const friends = [
+  {
+    name: "All",
+    id: "all",
+  },
+  {
+    name: "Solo",
+    id: "solo",
+  },
+  {
+    name: pref.friendName,
+    id: pref.friendID,
+  },
+  {
+    name: "Juan",
+    id: "0000",
+  },
+];
 
-// Emojis
-const _solos = [...new Map(data.imoji.map((emo) => [emo.src, emo])).values()];
-_solos.sort(() => Math.random() - 0.5);
-const solosID = _solos.map((emo) => {
-  emo.src = emo.src.replace("%s", preferences.avatarID);
-  return emo;
-});
+export const addID = ({ src, friend }: { src: string; friend?: string }) => {
+  if (!pref.myID) return src;
 
-export const emojis = {
-  solo: solosID,
-  friends: friendsID,
+  friend = friend || pref.friendID;
+
+  // Replace user ID pattern with '%s' placeholder
+  src = src.replace(/\d{9}_1(_|-)s1/, "%s");
+
+  // Replace placeholder with my user ID
+  src = src.replace("%s", pref.myID);
+
+  // Replace second placeholder with friend's user ID
+  if (friend) src = src.replace(/%s/g, friend);
+
+  return src;
 };
-
-export const cuteCat = (cat: string) => cat.replaceAll("#mt_", "").replaceAll("_", " ");

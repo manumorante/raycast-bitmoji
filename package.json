@@ -11,14 +11,21 @@
   "license": "MIT",
   "commands": [
     {
-      "name": "index",
-      "title": "Search Emoji",
-      "description": "Quickly search for an emoji",
+      "name": "emojis",
+      "title": "Emojis",
+      "description": "Search Emojis",
+      "mode": "view"
+    },
+    {
+      "name": "outfits",
+      "title": "Outfits",
+      "description": "Explore Outfits",
       "mode": "view"
     }
   ],
   "dependencies": {
-    "@raycast/api": "^1.58.1"
+    "@raycast/api": "^1.58.1",
+    "nanoid": "^5.0.1"
   },
   "devDependencies": {
     "@raycast/eslint-config": "1.0.5",
@@ -37,27 +44,39 @@
   },
   "preferences": [
     {
-      "name": "avatarID",
-      "description": "Your Bitmoji user ID",
+      "name": "myID",
+      "description": "My Bitmoji ID",
       "type": "textfield",
       "required": true,
-      "title": "Avatar ID",
-      "placeholder": "Your Bitmoji user ID"
+      "title": "My ID"
+    },
+    {
+      "name": "myName",
+      "description": "My own name",
+      "type": "textfield",
+      "required": false,
+      "title": "My Name"
     },
     {
       "name": "friendID",
-      "description": "Your friend Bitmoji user ID",
+      "description": "Friend ID",
       "type": "textfield",
       "required": false,
-      "title": "Friend ID",
-      "placeholder": "Your friend Bitmoji user ID"
+      "title": "Friend ID"
     },
     {
-      "name": "gridSize",
-      "description": "Grid size",
+      "name": "friendName",
+      "description": "Friend Name",
+      "type": "textfield",
+      "required": false,
+      "title": "Friend Name"
+    },
+    {
+      "name": "columns",
+      "description": "Columns for the grid",
       "type": "dropdown",
       "required": false,
-      "title": "Grid size",
+      "title": "Columns",
       "default": "5",
       "data": [
         {
@@ -75,7 +94,7 @@
       ]
     },
     {
-      "name": "showTitle",
+      "name": "title",
       "description": "Show title",
       "type": "checkbox",
       "required": false,
