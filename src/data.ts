@@ -1,9 +1,11 @@
-import { getPreferenceValues } from "@raycast/api";
+import { getPreferenceValues, environment } from "@raycast/api";
 export { default as emojis } from "../data/emojis.json";
 export { default as brands } from "../data/brands.json";
 export { default as outfits } from "../data/outfits.json";
 
 export const pref = getPreferenceValues();
+
+export const imagePah = `${environment.supportPath}/bitmoji.png`;
 
 export const friends = [
   {
@@ -19,8 +21,28 @@ export const friends = [
     id: pref.friendID,
   },
   {
-    name: "Juan",
-    id: "0000",
+    name: "Fake Sofi",
+    id: "270452321_2-s1",
+  },
+  {
+    name: "Fake Kelsan",
+    id: "270452170_2-s1",
+  },
+  {
+    name: "Fake Hermana",
+    id: "270452148_2-s1",
+  },
+  {
+    name: "Fake Hermano",
+    id: "270452349_2-s1",
+  },
+  {
+    name: "Fake Pat",
+    id: "270452144_2-s1",
+  },
+  {
+    name: "Fake Gaab",
+    id: "270452022_2-s1",
   },
 ];
 

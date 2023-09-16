@@ -25,7 +25,8 @@
   ],
   "dependencies": {
     "@raycast/api": "^1.58.1",
-    "nanoid": "^5.0.1"
+    "image-downloader": "^4.3.0",
+    "run-applescript": "^6.0.0"
   },
   "devDependencies": {
     "@raycast/eslint-config": "1.0.5",

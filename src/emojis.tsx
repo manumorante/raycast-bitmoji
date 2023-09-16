@@ -1,8 +1,10 @@
-import { Action, ActionPanel, Grid, Icon } from "@raycast/api";
-import { emojis, addID, pref } from "./data";
+import { Action, ActionPanel, Grid, Icon, showHUD } from "@raycast/api";
+import { emojis, addID, pref, imagePah } from "./data";
 import FriendsDropdown from "./FriendsDropdown";
 import { Emoji } from "./types";
 import { useState } from "react";
+import { runAppleScript } from "run-applescript";
+import { image } from "image-downloader";
 
 export default function Command() {
   const [people, setPeople] = useState("all");
@@ -25,6 +27,12 @@ export default function Command() {
     }
   };
 
+  const handleCopy = (src: string) => {
+    image({ url: src, dest: imagePah }).catch((e) => console.log("Error", e));
+    runAppleScript(`set the clipboard to POSIX file "${imagePah}"`);
+    showHUD("Copied");
+  };
+
   return (
     <Grid
       columns={Number(pref.columns)}
@@ -45,7 +53,8 @@ export default function Command() {
               keywords={[...emoji.title, ...emoji.tags]}
               actions={
                 <ActionPanel>
-                  <Action.CopyToClipboard title="Copy Emoji" content={src} />
+                  <Action icon={Icon.Clipboard} title="Copy Image" onAction={() => handleCopy(src)} />
+                  <Action.CopyToClipboard title="Copy URL" content={src} />
 
                   <ActionPanel.Section title="Tags">
                     {emoji.tags.map((tag: string) => (
