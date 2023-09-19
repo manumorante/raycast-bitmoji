@@ -1,37 +1,37 @@
-import { Action, ActionPanel, Grid, Icon, showHUD } from "@raycast/api";
-import { emojis, addID, pref, imagePah } from "./data";
-import FriendsDropdown from "./FriendsDropdown";
+import { Action, ActionPanel, Grid, Color, Icon, showHUD } from "@raycast/api";
+import { emojis, friends, addID, pref, getImage, copyImage } from "./data";
 import { Emoji } from "./types";
-import { useState } from "react";
-import { runAppleScript } from "run-applescript";
-import { image } from "image-downloader";
+import { useEffect, useState } from "react";
 
 export default function Command() {
-  const [people, setPeople] = useState("all");
+  const [filter, setFilter] = useState("all");
   const [friend, setFriend] = useState("");
+  const [results, setResults] = useState<Emoji[]>([]);
 
-  const results =
-    people === "all"
-      ? emojis
-      : people === "solo"
-      ? emojis.filter((item) => item.friends === false)
-      : emojis.filter((item) => item.friends === true);
-  results.sort(() => Math.random() - 0.5);
+  // General filter
+  useEffect(() => {
+    let _results = emojis;
+    let _friend = friend;
 
-  const handlePeopleChange = (value: string) => {
-    setPeople(value);
-
-    // Change friend with id
-    if (value !== "all" && value !== "solo") {
-      setFriend(value);
+    // When `filter` is solo, filter by no friends
+    if (filter === "solo") {
+      _results = emojis.filter((item) => item.friends === false);
     }
-  };
 
-  const handleCopy = (src: string) => {
-    image({ url: src, dest: imagePah }).catch((e) => console.log("Error", e));
-    runAppleScript(`set the clipboard to POSIX file "${imagePah}"`);
-    showHUD("Copied");
-  };
+    // When `filter` is a friend, filter by friends and set friend
+    if (filter !== "all" && filter !== "solo") {
+      _friend = filter;
+      _results = emojis.filter((item) => item.friends === true);
+    }
+
+    _results = _results.map((item) => ({
+      ...item,
+      src: addID({ src: item.src, friend: _friend }),
+    }));
+
+    setFriend(_friend);
+    setResults(_results);
+  }, [filter]);
 
   return (
     <Grid
@@ -39,35 +39,32 @@ export default function Command() {
       aspectRatio="1"
       fit={Grid.Fit.Contain}
       searchBarPlaceholder="Search for Emojis"
-      searchBarAccessory={<FriendsDropdown active={people} onChange={handlePeopleChange} />}
+      searchBarAccessory={<Filter active={filter} onChange={(value) => setFilter(value)} />}
     >
       <Grid.Section title={`${results.length} emojis`}>
-        {results.map((emoji: Emoji) => {
-          const src = addID({ src: emoji.src, friend });
-
+        {results.map(({ src, title, description, tags }: Emoji) => {
           return (
             <Grid.Item
               key={src}
-              {...(pref.title ? { title: emoji.title } : {})}
+              {...(pref.title ? { title: title } : {})}
               content={src}
-              keywords={[...emoji.title, ...emoji.tags]}
+              keywords={[...title, ...tags]}
               actions={
                 <ActionPanel>
                   <Action icon={Icon.Clipboard} title="Copy Image" onAction={() => handleCopy(src)} />
-                  <Action.CopyToClipboard title="Copy URL" content={src} />
+                  <Action.CopyToClipboard icon={Icon.Link} title="Copy URL" content={src} />
+                  <Action.CopyToClipboard icon={Icon.Code} title="Copy Markdown" content={`![${title}](${src})`} />
 
                   <ActionPanel.Section title="Tags">
-                    {emoji.tags.map((tag: string) => (
+                    {tags.map((tag: string) => (
                       <Action.CopyToClipboard key={tag} icon={Icon.Tag} title={tag} content={tag} />
                     ))}
                   </ActionPanel.Section>
 
-                  {emoji.title && (
-                    <ActionPanel.Section title="Description">
-                      <Action title={emoji.title} />
-                      {emoji.description && <Action title={emoji.description} />}
-                    </ActionPanel.Section>
-                  )}
+                  <ActionPanel.Section title="Description">
+                    <Action title={title} />
+                    {description && <Action title={description} />}
+                  </ActionPanel.Section>
                 </ActionPanel>
               }
             />
@@ -77,3 +74,24 @@ export default function Command() {
     </Grid>
   );
 }
+
+const Filter = ({ active, onChange }: { active: string; onChange: (value: string) => void }) => {
+  return (
+    <Grid.Dropdown defaultValue={active} storeValue tooltip="People" onChange={onChange}>
+      {friends.map(({ id, name }, i) => (
+        <Grid.Dropdown.Item
+          icon={{ source: Icon.Person, tintColor: active === id ? Color.PrimaryText : Color.SecondaryText }}
+          key={id}
+          value={id}
+          title={`${name || `Friend ${i}`}`}
+        />
+      ))}
+    </Grid.Dropdown>
+  );
+};
+
+const handleCopy = async (src: string) => {
+  await getImage(src);
+  await copyImage();
+  showHUD("Copied");
+};

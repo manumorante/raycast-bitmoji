@@ -58,20 +58,7 @@
       "required": false,
       "title": "My Name"
     },
-    {
-      "name": "friendID",
-      "description": "Friend ID",
-      "type": "textfield",
-      "required": false,
-      "title": "Friend ID"
-    },
-    {
-      "name": "friendName",
-      "description": "Friend Name",
-      "type": "textfield",
-      "required": false,
-      "title": "Friend Name"
-    },
+   
     {
       "name": "columns",
       "description": "Columns for the grid",
