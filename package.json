@@ -58,7 +58,6 @@
       "required": false,
       "title": "My Name"
     },
-   
     {
       "name": "columns",
       "description": "Columns for the grid",

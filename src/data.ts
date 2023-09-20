@@ -2,23 +2,11 @@ import { getPreferenceValues, environment } from "@raycast/api";
 export { default as emojis } from "../data/emojis.json";
 export { default as brands } from "../data/brands.json";
 export { default as outfits } from "../data/outfits.json";
-import _friends from "../data/friends.json";
+export { default as friends } from "../data/friends.json";
 import { image } from "image-downloader";
 import { runAppleScript } from "run-applescript";
 
 export const pref = getPreferenceValues();
-
-export const friends = [
-  {
-    name: "All",
-    id: "all",
-  },
-  {
-    name: "Solo",
-    id: "solo",
-  },
-  ..._friends,
-];
 
 export const addID = ({ src, friend }: { src: string; friend?: string }) => {
   if (!pref.myID) return src;
@@ -37,12 +25,9 @@ export const addID = ({ src, friend }: { src: string; friend?: string }) => {
   return src;
 };
 
-const imagePah = `${environment.supportPath}/bitmoji.png`;
+export const imagePah = `${environment.supportPath}/bitmoji.png`;
 
-export const getImage = async (src: string) => {
+export const getAndCopy = async (src: string) => {
   await image({ url: src, dest: imagePah }).catch((e) => console.log("Error", e));
-};
-
-export const copyImage = async () => {
   await runAppleScript(`set the clipboard to POSIX file "${imagePah}"`);
 };
