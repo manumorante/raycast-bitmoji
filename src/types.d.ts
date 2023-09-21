@@ -3,6 +3,7 @@ export type Emoji = {
   description: string;
   src: string;
   tags: string[];
+  categories: string[];
   friends: boolean;
 };
 

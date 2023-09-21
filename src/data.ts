@@ -1,7 +1,9 @@
 import { getPreferenceValues, environment } from "@raycast/api";
-export { default as emojis } from "../data/emojis.json";
-export { default as brands } from "../data/brands.json";
-export { default as outfits } from "../data/outfits.json";
+import data from "../data/data.json";
+export const emojis = data.emojis;
+export const categories = data.categories;
+export const brands = data.brands;
+export const outfits = data.outfits;
 export { default as friends } from "../data/friends.json";
 import { image } from "image-downloader";
 import { runAppleScript } from "run-applescript";
