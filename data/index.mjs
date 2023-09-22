@@ -8,17 +8,53 @@ const emojis = []
 const brands = []
 const outfits = []
 
-// Utils
-const removeID = (str) => str.replace(/\d{9}_1(_|-)s1/, "%s")
-
 const normalizeCats = (cats) => {
   return [...new Set(cats.map(cat => normalizeCat(cat)))]
 }
 
+const nokeys = [
+  '#mt',
+  'key',
+  'venmo',
+  'textless',
+  'textess',
+  'text',
+  'com',
+  'meme',
+  'interactive',
+  'removed',
+  'removedfriend',
+  'hold',
+  'hometab',
+  'batcha',
+  'ko',
+  'bust',
+  'mood'
+];
+
+const mergeKeys = [
+  { key: 'posvibes', merge: 'positive' },
+  { key: 'ilove', merge: 'love' },
+  { key: 'loveyou', merge: 'love' },
+  { key: 'romance', merge: 'love' },
+  { key: 'lovethisquicksend', merge: 'love' },
+  { key: 'urwelcome', merge: 'hello' },
+  { key: 'bdaycom', merge: 'bday' },
+  { key: 'waaahquicksend', merge: 'waaah' },
+  { key: 'yayquicksend', merge: 'yay' },
+  { key: 'yayrandom', merge: 'yay' },
+  { key: 'lolquicksend', merge: 'lol' },
+  { key: 'waaaah', merge: 'waaah' },
+]
+
 const normalizeCat = (cat) => {
-  const nokeys = ['#mt', 'key', 'venmo', 'textless', 'textess', 'text', 'com', 'interactive', 'removed', 'hold', 'hometab'];
   const normalizedCat = [...new Set(cat.split('_').map(c => c.replace(/\d+$/, '')).filter(c => !nokeys.includes(c)))];
-  return normalizedCat.join('_');
+  const merged = normalizedCat.map(c => {
+    const merge = mergeKeys.find(m => m.key === c);
+    if(merge) return merge.merge;
+    return c;
+  });
+  return merged.join('_');
 }
 
 const normalizeTags = (tags) => {
@@ -28,7 +64,6 @@ const normalizeTags = (tags) => {
     return tag.replaceAll("*", ""); // remove asterisks
   }))];
 }
-
 
 const parse = ({item, friends}) => {
   const tags = normalizeTags(item.tags)
@@ -47,19 +82,21 @@ raw.imoji.map(item => {
   emojis.push(parse({item, friends: false}))
 })
 
-const categories = [...new Set(
-  raw.imoji.reduce((acc, item) => {
-    const itemCats = [...new Set(item.categories.map(cat => normalizeCat(cat)))];
-    return [...acc, ...itemCats];
-  }, [])
-)];
+raw.friends.map(item => {
+  emojis.push(parse({item, friends: true}))
+})
 
+const categories = [
+  ...new Set(
+    emojis.flatMap((item) => item.categories)
+  ),
+];
 
 const categoriesCount = []
 categories.map(cat => {
   categoriesCount.push({
     "name": cat,
-    "count": raw.imoji.filter(el =>
+    "count": emojis.filter(el =>
       el.categories.some(c => c.includes(cat))
     ).length
   })
@@ -67,12 +104,9 @@ categories.map(cat => {
 
 categoriesCount.sort((a, b) => b.count - a.count)
 
-// console.log(categoriesCount)
+console.log(categoriesCount)
 
-raw.friends.map(item => {
-  emojis.push(parse({item, friends: true}))
-})
-
+const removeID = (str) => str.replace(/\d{9}_1(_|-)s1/, "%s")
 raw.outfits.male.brands.map(brand => {
   brands.push({
     "id": `${brand.id}`,

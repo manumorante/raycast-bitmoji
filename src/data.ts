@@ -1,7 +1,7 @@
 import { getPreferenceValues, environment } from "@raycast/api";
 import data from "../data/data.json";
 export const emojis = data.emojis;
-export const categories = data.categories;
+export const categories = data.categories.slice(0, 30);
 export const brands = data.brands;
 export const outfits = data.outfits;
 export { default as friends } from "../data/friends.json";
