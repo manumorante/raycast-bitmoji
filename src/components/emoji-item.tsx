@@ -1,26 +1,26 @@
 import { Action, ActionPanel, Grid, Icon, showHUD } from "@raycast/api";
 import { addID, friends, getAndCopy, imagePah } from "../data";
-import { Emoji } from "../types";
+import { Emoji, Friend } from "../types";
 
 export default function EmojiItem({
   item,
   friend,
   setFriend,
   setQuery,
-  adUsed,
-  removeUsed,
-  clearUsed,
+  addRecent,
+  removeRecentItem,
+  clearRecent,
 }: {
   item: Emoji;
-  friend: string;
-  setFriend: (value: string) => void;
+  friend: Friend;
+  setFriend: (value: Friend) => void;
   setQuery: (value: string) => void;
-  adUsed: (value: string) => void;
-  removeUsed: (value: string) => void;
-  clearUsed: () => void;
+  addRecent: (value: string) => void;
+  removeRecentItem: (value: string) => void;
+  clearRecent: () => void;
 }) {
   const { src, title, description, tags } = item;
-  const SRC = addID({ src, friend });
+  const SRC = addID({ src, friend: friend.id });
 
   const handleCopy = async (src: string) => {
     await getAndCopy(src);
@@ -39,21 +39,26 @@ export default function EmojiItem({
               title="Copy Image"
               onAction={() => {
                 handleCopy(SRC);
-                adUsed(src);
+                addRecent(src);
               }}
             />
             <Action.ShowInFinder title="Show in Finder" path={imagePah} shortcut={{ modifiers: ["cmd"], key: "s" }} />
           </ActionPanel.Section>
 
-          <ActionPanel.Submenu icon={Icon.Person} title="Friends" shortcut={{ modifiers: ["cmd"], key: "f" }}>
-            {friend && (
-              <ActionPanel.Section>
-                <Action icon={Icon.XMarkCircle} title="Solo" onAction={() => setFriend("")} />
-              </ActionPanel.Section>
-            )}
+          {friend.id && (
+            <ActionPanel.Section>
+              <Action
+                icon={Icon.XMarkCircle}
+                title="Solo"
+                onAction={() => setFriend({ id: "", name: "" })}
+                shortcut={{ modifiers: ["cmd", "shift"], key: "f" }}
+              />
+            </ActionPanel.Section>
+          )}
 
-            {friends.map(({ id, name }) => (
-              <Action icon={Icon.Person} key={id} onAction={() => setFriend(id)} title={name} />
+          <ActionPanel.Submenu icon={Icon.Person} title="Friends" shortcut={{ modifiers: ["cmd"], key: "f" }}>
+            {friends.map((item) => (
+              <Action icon={Icon.Person} key={item.id} onAction={() => setFriend(item)} title={item.name} />
             ))}
           </ActionPanel.Submenu>
 
@@ -73,11 +78,11 @@ export default function EmojiItem({
               icon={Icon.XMarkCircle}
               title="Remove Item"
               onAction={() => {
-                removeUsed(src);
+                removeRecentItem(src);
                 showHUD("Removed");
               }}
             />
-            <Action icon={Icon.XMarkCircle} title="Clear All" onAction={clearUsed} />
+            <Action icon={Icon.XMarkCircle} title="Clear All" onAction={clearRecent} />
           </ActionPanel.Section>
         </ActionPanel>
       }

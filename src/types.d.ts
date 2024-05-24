@@ -18,3 +18,8 @@ export type Outfit = {
   id: string;
   src: string;
 };
+
+export type Friend = {
+  name: string;
+  id: string;
+};
