@@ -15,12 +15,6 @@
       "title": "Emojis",
       "description": "Search Emojis",
       "mode": "view"
-    },
-    {
-      "name": "outfits",
-      "title": "Outfits",
-      "description": "Explore Outfits",
-      "mode": "view"
     }
   ],
   "dependencies": {

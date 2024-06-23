@@ -5,8 +5,6 @@ console.clear()
 const raw = JSON.parse(readFileSync('./templates.json', 'utf8'))
 
 const emojis = []
-const brands = []
-const outfits = []
 
 const normalizeCats = (cats) => {
   return [...new Set(cats.map(cat => normalizeCat(cat)))]
@@ -60,12 +58,12 @@ const normalizeCat = (cat) => {
 const normalizeTags = (tags) => {
   return [...new Set(tags.map(tag => {
     tag = tag.normalize("NFD").replace(/[\u0300-\u036f]/g, ""); // remove accents
-    tag = tag.replaceAll(/(.)\1+/g, "$1"); // remove consecutive repeated characters
+    // tag = tag.replaceAll(/(.)\1+/g, "$1"); // remove consecutive repeated characters
     return tag.replaceAll("*", ""); // remove asterisks
   }))];
 }
 
-const parse = ({item, friends}) => {
+const parse = ({item}) => {
   const tags = normalizeTags(item.tags)
   return {
     "title": item.alt_text || tags.slice(0, 1).join(),
@@ -74,27 +72,22 @@ const parse = ({item, friends}) => {
     "tags": tags,
     "supertag": item.supertags[0].replace("#", ""),
     "categories": normalizeCats(item.categories),
-    "friends": friends,
   }
 }
 
 raw.imoji.map(item => {
-  emojis.push(parse({item, friends: false}))
+  emojis.push(parse({item}))
 })
 
-raw.friends.map(item => {
-  emojis.push(parse({item, friends: true}))
-})
-
-const categories = [
+const categoriesFlat = [
   ...new Set(
     emojis.flatMap((item) => item.categories)
   ),
 ];
 
-const categoriesCount = []
-categories.map(cat => {
-  categoriesCount.push({
+const categories = []
+categoriesFlat.map(cat => {
+  categories.push({
     "name": cat,
     "count": emojis.filter(el =>
       el.categories.some(c => c.includes(cat))
@@ -102,36 +95,15 @@ categories.map(cat => {
   })
 })
 
-categoriesCount.sort((a, b) => b.count - a.count)
+categories.sort((a, b) => b.count - a.count)
 
-console.log(categoriesCount)
-
-const removeID = (str) => str.replace(/\d{9}_1(_|-)s1/, "%s")
-raw.outfits.male.brands.map(brand => {
-  brands.push({
-    "id": `${brand.id}`,
-    "title": brand.name,
-    "src": brand.logo,
-  })
-
-  brand.outfits.map(outfit => {
-    outfits.push({
-      "brand": `${brand.id}`,
-      "id": `${outfit.id}`,
-      "src": removeID(outfit.image),
-    })
-  })
-})
+console.log(categories)
 
 const uniqueEmojis = [...new Map(emojis.map(item => [item.src, item])).values()]
-const uniqueBrands = [...new Map(brands.map(item => [item.id, item])).values()]
-const uniqueOutfits = [...new Map(outfits.map(item => [item.src, item])).values()]
 
 const data = {
   "emojis": uniqueEmojis,
-  "categories": categoriesCount,
-  "brands": uniqueBrands,
-  "outfits": uniqueOutfits,
+  "categories": categories,
 }
 
 writeFileSync('./data.json', JSON.stringify(data, null, 2));

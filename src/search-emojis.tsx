@@ -1,50 +1,61 @@
-import { Grid, Cache } from "@raycast/api";
-import { emojis, pref } from "./data";
-import CategoryFilter from "./components/category-filter";
-import EmojiItem from "./components/emoji-item";
-import { Emoji } from "./types";
+import { Action, ActionPanel, Grid, Icon, showHUD } from "@raycast/api";
+import { emojis, categories, pref, addID, getAndCopy, imagePah } from "./data";
 import { useEffect, useState } from "react";
-
-const cache = new Cache();
+import { Emoji } from "./types";
 
 export default function Command() {
   const [query, setQuery] = useState("");
-  const [friend, setFriend] = useState({ id: "", name: "" });
   const [filterCat, setFilterCat] = useState("");
   const [results, setResults] = useState<Emoji[]>([]);
 
-  const recentCached = cache.get("recent-emojis");
-  const recentsSRC = recentCached ? JSON.parse(recentCached) : [];
-  const recentsEmojis = emojis.filter((e) => recentsSRC.includes(e.src));
-
-  const addRecent = (src: string) => {
-    const recents = [src, ...recentsSRC.filter((str: string) => str !== src)];
-    cache.set("recent-emojis", JSON.stringify(recents.slice(0, 5)));
-  };
-
-  const removeRecentItem = (src: string) => {
-    const recents = recentsSRC.filter((str: string) => str !== src);
-    cache.set("recent-emojis", JSON.stringify(recents));
-  };
-
-  const clearRecent = () => {
-    cache.remove("recent-emojis");
-  };
-
   useEffect(() => {
-    const isFriend = !["solo", ""].includes(friend.id);
-
-    const res = emojis.filter(
+    const filteredResults = emojis.filter(
       (e) =>
-        e.friends === isFriend &&
         (filterCat === "" || e.categories.includes(filterCat)) &&
-        (e.tags.some((k) => k.includes(query)) || e.title.includes(query) || e.description.includes(query))
+        (e.tags.some((k) => k.includes(query)) || e.title.includes(query) || e.description.includes(query)),
     );
+    setResults(filteredResults);
+  }, [query, filterCat]);
 
-    res.sort(() => Math.random() - 0.5);
+  function EmojiItem({ emoji }: { emoji: Emoji }) {
+    const { src, title, description, tags } = emoji;
+    const SRC = addID({ src });
 
-    setResults(res);
-  }, [query, filterCat, friend]);
+    const handleCopy = async (src: string) => {
+      await getAndCopy(src);
+      showHUD("Copied");
+    };
+
+    return (
+      <Grid.Item
+        content={SRC}
+        keywords={[title, description, ...tags]}
+        actions={
+          <ActionPanel>
+            <Action
+              icon={Icon.Clipboard}
+              title="Copy Image"
+              onAction={() => {
+                handleCopy(SRC);
+              }}
+            />
+            <Action.ShowInFinder title="Show in Finder" path={imagePah} shortcut={{ modifiers: ["cmd"], key: "s" }} />
+
+            <ActionPanel.Submenu icon={Icon.Tag} title="Tags" shortcut={{ modifiers: ["cmd"], key: "t" }}>
+              {tags.map((tag: string) => (
+                <Action key={tag} icon={Icon.Tag} title={tag} onAction={() => setQuery(tag)} />
+              ))}
+            </ActionPanel.Submenu>
+
+            <ActionPanel.Submenu icon={Icon.Info} title="More Info" shortcut={{ modifiers: ["cmd"], key: "i" }}>
+              <Action.CopyToClipboard title={title} content={title} />
+              {description && <Action.CopyToClipboard title={description} content={description} />}
+            </ActionPanel.Submenu>
+          </ActionPanel>
+        }
+      />
+    );
+  }
 
   return (
     <Grid
@@ -56,45 +67,26 @@ export default function Command() {
       fit={Grid.Fit.Contain}
       aspectRatio="1"
       searchBarAccessory={
-        <CategoryFilter
-          active={filterCat}
+        <Grid.Dropdown
+          value={filterCat}
+          tooltip="Category"
           onChange={(cat) => {
             setQuery("");
             setFilterCat(cat);
           }}
-        />
+        >
+          <Grid.Dropdown.Item icon={Icon.Tag} value="" title="All categories" />
+
+          {categories.map((cat) => (
+            <Grid.Dropdown.Item key={cat.name} icon={Icon.Tag} value={cat.name} title={cat.name} />
+          ))}
+        </Grid.Dropdown>
       }
     >
-      {recentsEmojis.length > 0 && (
-        <Grid.Section columns={5} aspectRatio="3/2" title="Recently used" subtitle={`${recentsEmojis.length}`}>
-          {recentsEmojis.map((item) => (
-            <EmojiItem
-              key={item.src}
-              item={item}
-              friend={friend}
-              setFriend={setFriend}
-              setQuery={setQuery}
-              addRecent={addRecent}
-              removeRecentItem={removeRecentItem}
-              clearRecent={clearRecent}
-            />
-          ))}
-        </Grid.Section>
-      )}
-
       {results.length > 0 && (
-        <Grid.Section title={friend.id ? `You & ${friend.name}` : "Emojis"} subtitle={`${results.length}`}>
-          {results.map((item) => (
-            <EmojiItem
-              key={item.src}
-              item={item}
-              friend={friend}
-              setFriend={setFriend}
-              setQuery={setQuery}
-              addRecent={addRecent}
-              removeRecentItem={removeRecentItem}
-              clearRecent={clearRecent}
-            />
+        <Grid.Section title={"Emojis"} subtitle={`${results.length}`}>
+          {results.map((emoji) => (
+            <EmojiItem key={emoji.src} emoji={emoji} />
           ))}
         </Grid.Section>
       )}

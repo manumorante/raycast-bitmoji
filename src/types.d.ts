@@ -4,7 +4,6 @@ export type Emoji = {
   src: string;
   tags: string[];
   categories: string[];
-  friends: boolean;
 };
 
 export type Brand = {
