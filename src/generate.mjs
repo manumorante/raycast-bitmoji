@@ -1,8 +1,30 @@
-import { readFileSync, writeFileSync } from "fs";
+import { writeFileSync } from "fs";
+import fetch from 'node-fetch';
 
-console.clear()
+const url = 'https://api.bitmoji.com/content/templates';
 
-const raw = JSON.parse(readFileSync('./templates.json', 'utf8'))
+async function fetchData() {
+  try {
+    const response = await fetch(url);
+    // Verifica si la solicitud fue exitosa
+    if (!response.ok) {
+      throw new Error(`Error: ${response.statusText}`);
+    }
+
+    // Obtén el JSON de la respuesta
+    const data = await response.json();
+    console.log('Datos obtenidos:', data);
+    
+    // Si necesitas utilizar los datos, puedes retornarlos o procesarlos aquí
+    return data;
+  } catch (error) {
+    console.error('Hubo un problema con la solicitud fetch:', error);
+  }
+}
+
+// Llama a la función para realizar la solicitud
+const raw = await fetchData();
+
 
 const emojis = []
 
