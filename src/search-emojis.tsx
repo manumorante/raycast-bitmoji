@@ -1,9 +1,21 @@
 import { image } from "image-downloader";
 import { runAppleScript } from "run-applescript";
-import { Action, ActionPanel, Grid, Icon, showHUD, getPreferenceValues, environment } from "@raycast/api";
+import {
+  Action,
+  ActionPanel,
+  Grid,
+  Icon,
+  showHUD,
+  getPreferenceValues,
+  environment,
+  openCommandPreferences,
+  Keyboard,
+} from "@raycast/api";
 import { useEffect, useState } from "react";
 import { emojis, categories } from "./data.json";
+
 import { Emoji } from "./types";
+const DEFAULT_ID = "20246000_31-s1";
 
 export default function Command() {
   const [query, setQuery] = useState("");
@@ -11,18 +23,15 @@ export default function Command() {
   const [results, setResults] = useState<Emoji[]>([]);
 
   const pref = getPreferenceValues();
-
-  const addID = ({ src }: { src: string }) => {
-    if (!pref.myID) return src;
-
-    // Replace user ID pattern with '%s' placeholder
-    src = src.replace(/\d{9}_1(_|-)s1/, "%s");
-
-    // Replace placeholder with my user ID
-    return src.replace("%s", pref.myID);
-  };
-
   const imagePah = `${environment.supportPath}/bitmoji.png`;
+  const myID = pref.myID || DEFAULT_ID;
+
+  const getImageWithMyID = ({ src }: { src: string }) => {
+    // Replace user ID pattern with '%s' placeholder then replace it with my user ID
+    src = src.replace(/\d{9}_1(_|-)s1/, "%s");
+    src = src.replace("%s", myID);
+    return src;
+  };
 
   const getAndCopy = async (src: string) => {
     await image({ url: src, dest: imagePah }).catch((e) => console.log("Error", e));
@@ -35,12 +44,15 @@ export default function Command() {
         (filterCat === "" || e.categories.includes(filterCat)) &&
         (e.tags.some((k) => k.includes(query)) || e.title.includes(query) || e.description.includes(query)),
     );
+
+    filteredResults.sort(() => Math.random() - 0.5);
+
     setResults(filteredResults);
   }, [query, filterCat]);
 
   function EmojiItem({ emoji }: { emoji: Emoji }) {
     const { src, title, description, tags } = emoji;
-    const SRC = addID({ src });
+    const SRC = getImageWithMyID({ src });
 
     const handleCopy = async (src: string) => {
       await getAndCopy(src);
@@ -59,8 +71,14 @@ export default function Command() {
               onAction={() => {
                 handleCopy(SRC);
               }}
+              shortcut={Keyboard.Shortcut.Common.Copy}
             />
-            <Action.ShowInFinder title="Show in Finder" path={imagePah} shortcut={{ modifiers: ["cmd"], key: "s" }} />
+            <Action.CopyToClipboard title="Copy Path" content={SRC} shortcut={Keyboard.Shortcut.Common.CopyPath} />
+            <Action.ShowInFinder title="Open in Finder" path={imagePah} shortcut={Keyboard.Shortcut.Common.Open} />
+
+            {pref.myID === "" && (
+              <Action icon={Icon.Gear} title="Add You Bitmoji ID" onAction={openCommandPreferences} />
+            )}
 
             <ActionPanel.Submenu icon={Icon.Tag} title="Tags" shortcut={{ modifiers: ["cmd"], key: "t" }}>
               {tags.map((tag: string) => (
