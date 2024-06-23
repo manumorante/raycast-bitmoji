@@ -1,12 +1,33 @@
-import { Action, ActionPanel, Grid, Icon, showHUD } from "@raycast/api";
-import { emojis, categories, pref, addID, getAndCopy, imagePah } from "./data";
+import { image } from "image-downloader";
+import { runAppleScript } from "run-applescript";
+import { Action, ActionPanel, Grid, Icon, showHUD, getPreferenceValues, environment } from "@raycast/api";
 import { useEffect, useState } from "react";
+import { emojis, categories } from "./data.json";
 import { Emoji } from "./types";
 
 export default function Command() {
   const [query, setQuery] = useState("");
   const [filterCat, setFilterCat] = useState("");
   const [results, setResults] = useState<Emoji[]>([]);
+
+  const pref = getPreferenceValues();
+
+  const addID = ({ src }: { src: string }) => {
+    if (!pref.myID) return src;
+
+    // Replace user ID pattern with '%s' placeholder
+    src = src.replace(/\d{9}_1(_|-)s1/, "%s");
+
+    // Replace placeholder with my user ID
+    return src.replace("%s", pref.myID);
+  };
+
+  const imagePah = `${environment.supportPath}/bitmoji.png`;
+
+  const getAndCopy = async (src: string) => {
+    await image({ url: src, dest: imagePah }).catch((e) => console.log("Error", e));
+    await runAppleScript(`set the clipboard to POSIX file "${imagePah}"`);
+  };
 
   useEffect(() => {
     const filteredResults = emojis.filter(
