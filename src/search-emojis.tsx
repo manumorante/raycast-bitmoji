@@ -1,5 +1,4 @@
 import { image } from "image-downloader";
-import { runAppleScript } from "run-applescript";
 import {
   Action,
   ActionPanel,
@@ -10,6 +9,7 @@ import {
   environment,
   openCommandPreferences,
   Keyboard,
+  Clipboard,
 } from "@raycast/api";
 import { useEffect, useState } from "react";
 import { emojis, categories } from "./data.json";
@@ -23,7 +23,7 @@ export default function Command() {
   const [results, setResults] = useState<Emoji[]>([]);
 
   const pref = getPreferenceValues();
-  const imagePah = `${environment.supportPath}/bitmoji.png`;
+  const dest = `${environment.supportPath}/bitmoji.png`;
   const myID = pref.myID || DEFAULT_ID;
 
   const getImageWithMyID = ({ src }: { src: string }) => {
@@ -33,9 +33,15 @@ export default function Command() {
     return src;
   };
 
-  const getAndCopy = async (src: string) => {
-    await image({ url: src, dest: imagePah }).catch((e) => console.log("Error", e));
-    await runAppleScript(`set the clipboard to POSIX file "${imagePah}"`);
+  const copyFile = async (file: string) => {
+    // copies a file (path) as file to clipboard
+    const fileContent: Clipboard.Content = { file };
+    await Clipboard.copy(fileContent);
+  };
+
+  const pasteFile = async (file: string) => {
+    const fileContent: Clipboard.Content = { file };
+    await Clipboard.paste(fileContent);
   };
 
   useEffect(() => {
@@ -52,16 +58,11 @@ export default function Command() {
 
   function EmojiItem({ emoji }: { emoji: Emoji }) {
     const { src, title, description, tags } = emoji;
-    const SRC = getImageWithMyID({ src });
-
-    const handleCopy = async (src: string) => {
-      await getAndCopy(src);
-      showHUD("Copied");
-    };
+    const url = getImageWithMyID({ src });
 
     return (
       <Grid.Item
-        content={SRC}
+        content={url}
         keywords={[title, description, ...tags]}
         actions={
           <ActionPanel>
@@ -69,12 +70,20 @@ export default function Command() {
               icon={Icon.Clipboard}
               title="Copy Image"
               onAction={() => {
-                handleCopy(SRC);
+                image({ url, dest }).then(() => {
+                  copyFile(dest);
+                  showHUD("Copied");
+                });
               }}
-              shortcut={Keyboard.Shortcut.Common.Copy}
             />
-            <Action.CopyToClipboard title="Copy Path" content={SRC} shortcut={Keyboard.Shortcut.Common.CopyPath} />
-            <Action.ShowInFinder title="Open in Finder" path={imagePah} shortcut={Keyboard.Shortcut.Common.Open} />
+            <Action
+              title="Paste Image"
+              onAction={() => {
+                image({ url, dest }).then(() => pasteFile(dest));
+              }}
+            />
+            <Action.CopyToClipboard title="Copy Path" content={url} shortcut={Keyboard.Shortcut.Common.CopyPath} />
+            <Action.ShowInFinder title="Open in Finder" path={dest} shortcut={Keyboard.Shortcut.Common.Open} />
 
             {pref.myID === "" && (
               <Action icon={Icon.Gear} title="Add You Bitmoji ID" onAction={openCommandPreferences} />
