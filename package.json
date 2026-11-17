@@ -59,7 +59,7 @@
   ],
   "dependencies": {
     "@raycast/api": "^1.75.2",
-    "@raycast/utils": "^1.15.0",
+    "@raycast/utils": "^2.3.3",
     "image-downloader": "^4.3.0"
   },
   "devDependencies": {
